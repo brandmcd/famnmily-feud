@@ -41,18 +41,20 @@ TYPES = {'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/j
 
 
 def read_survey_csv(path):
-    """Turn a normalized survey board (Question, Rank, Answer, Votes, Points) into question records.
-    Points are each answer's share of everyone who answered the question, as on the show."""
+    """Turn a survey board (Question, Rank, Answer, Votes, and optionally Points and Surveyed) into
+    question records. Without a Points column, points are each answer's share of the votes listed;
+    with Surveyed, they stay a share of everyone asked even when rare answers were left out."""
     qs = {}
     with open(path, newline='') as f:
         for row in csv.DictReader(f):
             q = qs.setdefault(row['Question'], {'title': row['Question'], 'answers': [], 'surveyed': 0})
-            q['surveyed'] += int(row['Votes'])
-            q['answers'].append({'text': row['Answer'], 'votes': int(row['Votes'])})
+            q['answers'].append({'text': row['Answer'], 'votes': int(row['Votes']),
+                                 'points': int(row['Points']) if row.get('Points') else None})
+            q['surveyed'] = int(row['Surveyed']) if row.get('Surveyed') else q['surveyed'] + int(row['Votes'])
     out = []
     for i, q in enumerate(qs.values()):
         q['answers'].sort(key=lambda a: -a['votes'])
-        q['answers'] = [{'text': a['text'], 'points': round(100 * a['votes'] / q['surveyed'])}
+        q['answers'] = [{'text': a['text'], 'points': a['points'] if a['points'] is not None else round(100 * a['votes'] / q['surveyed'])}
                         for a in q['answers'][:MAX_ANSWERS]]
         out.append({'id': f'q{i + 1}', 'enabled': True, **q})
     return out

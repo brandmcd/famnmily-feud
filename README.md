@@ -28,7 +28,7 @@ Survey answers are the whole game, so they are not in this repository. The serve
 
 On first start the server seeds `data/questions.json` from, in order:
 
-1. `data/board.csv` (or the file named by `FEUD_BOARD_CSV`), a survey tally with columns `Question, Rank, Answer, Votes, Points`. Points are recomputed as each answer's share of everyone who answered, as on the show. Up to 8 answers per question are kept.
+1. `data/board.csv` (or the file named by `FEUD_BOARD_CSV`), a survey tally with columns `Question, Rank, Answer, Votes` and optionally `Points` and `Surveyed`. Without `Points`, each answer scores its share of the votes listed. With `Surveyed`, the host reads that number out and points stay a share of everyone asked, even when rare answers were left off the board. Up to 8 answers per question are kept.
 2. `questions.example.json`, three made-up questions so the game runs out of the box.
 
 After that, edit questions on the `/admin` page. "Re-import from survey" on that page replaces everything with a fresh read of the CSV.
