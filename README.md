@@ -37,7 +37,7 @@ The admin key is read from `/etc/famnmily-feud/admin.key` (or `FEUD_ADMIN_KEY_FI
 
 ## Logos
 
-`static/img/` holds the FAMNM logo files and is gitignored. Add your own `full-white.png` (a white logo on a transparent background) there.
+`static/img/` holds the FAMNM logo files. The game uses `full-white.png`; swap it for your own logo to reuse the game.
 
 ## How a game runs
 
