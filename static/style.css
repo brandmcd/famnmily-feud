@@ -1,0 +1,64 @@
+@import url(fonts.css);
+
+/* FAMNM palette (Branding Standards v1.1 and the FAMNM Color Palette deck). */
+:root {
+  --navy: #003688;
+  --navy-deep: #040D7F;
+  --navy-ink: #020644;
+  --gold: #FFD536;
+  --gold-deep: #E9CC06;
+  --gray: #616263;
+  --gray-deep: #424141;
+  --sky: #3B8AC3;
+  --light: #EFEFEF;
+  --red: #D7262E;
+  --blue: #1F63C6;
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--navy-ink); color: #fff; }
+body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
+button, input { font: inherit; }
+a { color: inherit; }
+
+/* The show's sunburst behind everything. */
+.rays {
+  background-color: var(--navy-deep);
+  background-image: repeating-conic-gradient(from 0deg at 50% 40%, rgba(255,255,255,.05) 0deg 7.5deg, transparent 7.5deg 15deg);
+  background-attachment: fixed;
+}
+
+/* Title lockup: white FAMNMily over gold FEUD in Roboto Black. */
+.feud-logo { display: inline-flex; flex-direction: column; align-items: center; line-height: .9; text-transform: uppercase; font-weight: 900; }
+.feud-logo .a { font-size: .5em; letter-spacing: .12em; }
+.feud-logo .b { font-size: 1em; letter-spacing: .04em; color: var(--gold); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4em;
+  border: 2px solid transparent; border-radius: 6px; padding: .8em 1.1em; cursor: pointer;
+  font-weight: 700; color: #fff; background: var(--navy-deep); text-decoration: none;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.btn:active { filter: brightness(.85); }
+.btn:disabled { opacity: .4; }
+.btn.gold { background: var(--gold); color: var(--navy-ink); }
+.btn.red { background: var(--red); }
+.btn.blue { background: var(--blue); }
+.btn.line { background: transparent; border-color: rgba(255,255,255,.75); }
+.btn.big { font-size: 1.15rem; padding: .95em 1.1em; width: 100%; font-weight: 900; text-transform: uppercase; letter-spacing: .03em; }
+
+.field {
+  width: 100%; padding: .8em .9em; border-radius: 6px; border: 0;
+  background: #fff; color: var(--navy-ink); font-size: 1.1rem; font-weight: 700;
+}
+.field:focus { outline: 3px solid var(--gold); outline-offset: 1px; }
+.field::placeholder { color: #8a8f99; font-weight: 400; }
+
+.label { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); margin: 0 0 8px; }
+.status-pill {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50; text-align: center;
+  background: var(--gold); color: var(--navy-ink); padding: .4em; font-weight: 700; font-size: .9rem; display: none;
+}
+.status-pill.show { display: block; }

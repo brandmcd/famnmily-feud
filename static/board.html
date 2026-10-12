@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAMNMily Feud board</title>
+<link rel="stylesheet" href="style.css?v=5">
+<style>
+  html, body { height: 100%; overflow: hidden; }
+  .screen { position: absolute; inset: 0; display: grid; grid-template-rows: 15vh 1fr 6vh; }
+
+  header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 2.5vw; }
+  header img { height: 5.4vh; }
+  header .feud-logo { font-size: 4.4vh; }
+  .round { justify-self: end; text-align: right; font-weight: 900; font-size: 2.6vh; text-transform: uppercase; letter-spacing: .04em; }
+  .round b { display: block; color: var(--gold); font-size: 2.2vh; }
+
+  .main { display: grid; grid-template-columns: 15vw 1fr 15vw; gap: 2vw; padding: 1vh 2.5vw 2vh; min-height: 0; }
+
+  .team { display: flex; flex-direction: column; justify-content: center; gap: 1.2vh; }
+  .team .name { font-weight: 900; text-transform: uppercase; font-size: 2.6vh; text-align: center; padding: 1vh .5vw; line-height: 1.05; }
+  .team.red .name { background: var(--red); }
+  .team.blue .name { background: var(--blue); }
+  .team .score { background: var(--navy-ink); border: .7vh solid var(--gold); border-radius: 1vh; text-align: center; font-weight: 900; font-size: 12vh; line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .team .tag { visibility: hidden; text-align: center; background: var(--gold); color: var(--navy-ink); font-weight: 900; text-transform: uppercase; font-size: 2.2vh; padding: .8vh 0; letter-spacing: .06em; }
+  .team.control .tag { visibility: visible; }
+
+  .center { display: grid; grid-template-rows: auto auto 1fr; gap: 1.6vh; min-height: 0; }
+  .question { font-size: 3.4vh; font-weight: 700; text-align: center; min-height: 8.5vh; display: flex; align-items: center; justify-content: center; line-height: 1.2; }
+  .question small { display: block; font-size: 1.9vh; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .1em; margin-bottom: .6vh; }
+  .bankrow { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.5vw; }
+  .bank { background: var(--navy-ink); border: .7vh solid var(--gold); border-radius: 1vh; min-width: 15vw; text-align: center; font-weight: 900; font-size: 7.5vh; line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .strikes { display: flex; gap: .8vw; }
+  .strikes.left { justify-content: flex-end; }
+  .strikes span { width: 7vh; height: 7vh; display: flex; align-items: center; justify-content: center; background: var(--navy-ink); border: .4vh solid #fff; border-radius: .6vh; color: var(--red); font-weight: 900; font-size: 6vh; line-height: 1; }
+
+  .board { border: 1vh solid var(--gold); border-radius: 2.2vh; background: var(--navy-ink); padding: 1.3vh; min-height: 0; box-shadow: 0 0 0 .5vh var(--navy-ink), 0 0 0 .9vh var(--gold-deep); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; gap: 1.1vh 1.1vw; height: 100%; }
+  .tile { perspective: 120vh; min-height: 0; }
+  .tile .inner { position: relative; width: 100%; height: 100%; transition: transform .55s ease-out; transform-style: preserve-3d; }
+  .tile.open .inner { transform: rotateX(-180deg); }
+  .face { position: absolute; inset: 0; backface-visibility: hidden; display: flex; align-items: center; border-radius: .5vh; }
+  .front { background: var(--navy); border: .35vh solid #6f93d6; justify-content: center; }
+  .front .num { min-width: 11vh; height: 6.6vh; padding: 0 2vh; border: .4vh solid #fff; border-radius: 50%; background: var(--navy-deep); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 4.4vh; }
+  .back { transform: rotateX(180deg); background: var(--blue); border: .35vh solid #fff; }
+  .back .text { flex: 1; padding: 0 1.4vw; font-family: 'Roboto Condensed', 'Roboto', sans-serif; font-weight: 800; font-size: 4vh; text-transform: uppercase; line-height: 1.02; }
+  .back .pts { align-self: stretch; display: flex; align-items: center; justify-content: center; width: 7.5vw; background: var(--navy-deep); border-left: .35vh solid #fff; font-weight: 900; font-size: 5vh; }
+  .tile.empty .front { background: #071a5c; border-color: #102a7a; }
+  .tile.empty .num { display: none; }
+
+  footer { display: flex; align-items: center; justify-content: center; gap: 3vw; font-size: 2.5vh; font-weight: 700; background: var(--navy-ink); }
+  footer .hl { color: var(--gold); }
+
+  .overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; pointer-events: none; opacity: 0; transition: opacity .15s; z-index: 10; }
+  .overlay.show { opacity: 1; }
+  #x-overlay { flex-direction: row; gap: 3vw; }
+  #x-overlay span { width: 36vh; height: 36vh; display: flex; align-items: center; justify-content: center; background: rgba(2,6,68,.8); border: 1.2vh solid #fff; border-radius: 2vh; color: var(--red); font-weight: 900; font-size: 40vh; line-height: 1; }
+  #buzz { position: absolute; left: 0; right: 0; bottom: 6vh; height: 12vh; z-index: 9; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 5.5vh; text-transform: uppercase; transform: translateY(30%); opacity: 0; visibility: hidden; transition: transform .2s, opacity .2s, visibility .2s; border-top: .6vh solid var(--gold); border-bottom: .6vh solid var(--gold); }
+  #buzz.show { transform: none; opacity: 1; visibility: visible; }
+  #buzz.red { background: var(--red); }
+  #buzz.blue { background: var(--blue); }
+  #win { background: rgba(2,6,68,.88); gap: 1vh; }
+  #win .who { font-weight: 900; font-size: 8vh; text-transform: uppercase; padding: 1vh 3vw; }
+  #win .pts { font-weight: 900; font-size: 22vh; color: var(--gold); line-height: 1; }
+
+  #final { gap: 3vh; text-align: center; z-index: 11; }
+  #final img { height: 8vh; }
+  #final .label-big { font-weight: 900; font-size: 4vh; text-transform: uppercase; letter-spacing: .12em; color: var(--gold); }
+  #final .who { font-weight: 900; font-size: 11vh; text-transform: uppercase; padding: 1vh 4vw; line-height: 1.1; }
+  #final .scoreline { display: flex; align-items: center; gap: 3vw; font-weight: 900; font-size: 16vh; line-height: 1; }
+  #final .scoreline span.r, #final .scoreline span.b { background: var(--navy-ink); border: 1vh solid var(--gold); border-radius: 1.5vh; padding: 1vh 3vw; min-width: 24vw; }
+  #final .scoreline .dash { font-size: 4vh; text-transform: uppercase; }
+  #final .r { color: #fff; box-shadow: inset 0 -2vh 0 var(--red); }
+  #final .b { color: #fff; box-shadow: inset 0 -2vh 0 var(--blue); }
+  #final .thanks { font-size: 3.4vh; font-weight: 700; }
+  #lobby { pointer-events: auto; gap: 4vh; text-align: center; }
+  #lobby img { height: 9vh; }
+  #lobby .feud-logo { font-size: 13vh; }
+  #lobby .join { font-size: 3.6vh; font-weight: 700; }
+  #lobby .join b { color: var(--gold); }
+  #lobby .bigcode { background: #fff; color: var(--navy-ink); font-weight: 900; font-size: 18vh; letter-spacing: .12em; padding: 0 3vw 0 4vw; border-radius: 1.5vh; line-height: 1.2; border: 1vh solid var(--gold); }
+  #lobby .teams { display: flex; gap: 2vw; align-items: center; font-size: 3vh; font-weight: 900; text-transform: uppercase; }
+  #lobby .teams span.t { padding: 1vh 2vw; }
+
+  #sound { background: rgba(2,6,68,.85); pointer-events: auto; cursor: pointer; z-index: 30; font-size: 4vh; font-weight: 700; gap: 1vh; }
+  #sound small { font-size: 2.4vh; font-weight: 400; }
+  #sound.gone { display: none; }
+  #fs { position: absolute; right: 1vw; bottom: 7vh; z-index: 20; opacity: .2; font-size: 1.6vh; padding: .5em .8em; }
+  #fs:hover { opacity: 1; }
+</style>
+</head>
+<body class="rays">
+<div class="screen">
+  <header>
+    <img src="img/full-white.png" alt="FAMNM">
+    <div class="feud-logo"><span class="a">FAMNMily</span><span class="b">Feud</span></div>
+    <div class="round" id="round"></div>
+  </header>
+  <div class="main">
+    <div class="team red" id="red"><div class="name"></div><div class="score">0</div><div class="tag">Playing</div></div>
+    <div class="center">
+      <div class="question" id="question"></div>
+      <div class="bankrow">
+        <div class="strikes left" id="strikes-red"></div>
+        <div class="bank" id="bank">0</div>
+        <div class="strikes" id="strikes-blue"></div>
+      </div>
+      <div class="board"><div class="tiles" id="tiles"></div></div>
+    </div>
+    <div class="team blue" id="blue"><div class="name"></div><div class="score">0</div><div class="tag">Playing</div></div>
+  </div>
+  <footer>
+    <span>Buzz in at <span class="hl" id="url"></span></span>
+    <span>Code <span class="hl" id="foot-code"></span></span>
+  </footer>
+</div>
+
+<div id="buzz"></div>
+<div class="overlay" id="x-overlay"></div>
+<div class="overlay" id="win"><div class="who"></div><div class="pts"></div></div>
+<div class="overlay rays" id="final">
+  <img src="img/full-white.png" alt="FAMNM">
+  <div class="label-big">Final score</div>
+  <div class="who"></div>
+  <div class="scoreline"><span class="r"></span><span class="dash">to</span><span class="b"></span></div>
+  <div class="thanks">Thanks for playing FAMNMily Feud</div>
+</div>
+<div class="overlay rays" id="lobby">
+  <img src="img/full-white.png" alt="FAMNM, FIRST Alumni and Mentors Network at Michigan">
+  <div class="feud-logo"><span class="a">FAMNMily</span><span class="b">Feud</span></div>
+  <div class="join">Get a buzzer on your phone: <b id="lobby-url"></b></div>
+  <div class="bigcode" id="lobby-code"></div>
+  <div class="teams"><span class="t" style="background:var(--red)" id="lobby-red"></span><span id="lobby-players"></span><span class="t" style="background:var(--blue)" id="lobby-blue"></span></div>
+</div>
+<div class="overlay show" id="sound">
+  <div>Click anywhere to start</div>
+  <small>Turns on sound and full screen</small>
+</div>
+<button class="btn line" id="fs">Full screen</button>
+<div class="status-pill" id="status"></div>
+
+<script src="common.js"></script>
+<script src="sound.js?v=2"></script>
+<script>
+  if (!CODE) location.href = './';
+  let lastFlash = null, prev = null, buzzTimer, winTimer;
+  const url = joinURL();
+  $('#url').textContent = $('#lobby-url').textContent = url;
+  $('#foot-code').textContent = $('#lobby-code').textContent = CODE;
+
+  const startup = () => {
+    Sound.unlock();
+    $('#sound').classList.add('gone');
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  };
+  $('#sound').onclick = startup;
+  $('#fs').onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+
+  function render(s) {
+    for (const t of ['red', 'blue']) {
+      const el = $('#' + t);
+      el.querySelector('.name').textContent = s.teams[t].name;
+      el.querySelector('.score').textContent = s.teams[t].score;
+      el.classList.toggle('control', s.control === t && ['play', 'steal'].includes(s.phase));
+      el.querySelector('.tag').textContent = s.phase === 'steal' && s.control !== t ? 'Steal' : 'Playing';
+      if (s.phase === 'steal') el.classList.toggle('control', s.control !== t);
+      $('#strikes-' + t).innerHTML = s.control === t && ['play', 'steal'].includes(s.phase) ? '<span>X</span>'.repeat(s.strikes) : '';
+    }
+    $('#lobby-red').textContent = s.teams.red.name;
+    $('#lobby-blue').textContent = s.teams.blue.name;
+    $('#lobby-players').textContent = s.players ? `${s.players} joined` : 'vs';
+    $('#lobby').classList.toggle('show', s.phase === 'lobby' || !s.question);
+
+    const mult = s.mult > 1 ? `${['', '', 'Double', 'Triple'][s.mult]} points` : '';
+    const rl = s.round > s.plan ? 'Tiebreaker' : `Round ${s.round} of ${s.plan}`;
+    $('#round').innerHTML = s.round ? `${rl}<b>${mult}</b>` : '';
+    const fs = s.final, fin = $('#final');
+    fin.classList.toggle('show', s.phase === 'over' && !!fs);
+    if (fs) {
+      const who = fin.querySelector('.who');
+      who.textContent = fs.team ? `${s.teams[fs.team].name} wins!` : "It's a tie!";
+      who.style.background = fs.team === 'red' ? 'var(--red)' : fs.team === 'blue' ? 'var(--blue)' : 'transparent';
+      fin.querySelector('.r').textContent = fs.red;
+      fin.querySelector('.b').textContent = fs.blue;
+    }
+    $('#bank').textContent = s.bank;
+
+    const q = s.question;
+    if (q) {
+      $('#question').innerHTML = `<div><small>We asked ${q.n} FIRST people</small>${esc(q.title)}</div>`;
+      const sameQ = prev && prev.question && prev.question.title === q.title;
+      if (!sameQ) buildTiles(q);
+      q.answers.forEach((a, i) => {
+        const tile = $('#tiles').children[i];
+        if (a && s.revealed[i]) {
+          tile.querySelector('.text').textContent = a.text;
+          tile.querySelector('.pts').textContent = a.points;
+        }
+        tile.classList.toggle('open', !!s.revealed[i]);
+      });
+    }
+
+    // Buzz banner
+    const b = s.buzz;
+    const buzzBar = $('#buzz');
+    if (b && ['faceoff'].includes(s.phase)) {
+      buzzBar.className = 'show ' + b.team;
+      buzzBar.innerHTML = `${esc(b.name)}&nbsp;buzzed first`;
+    } else buzzBar.className = '';
+
+    // One-shot effects, keyed by flash id so a reconnect never replays them.
+    const f = s.flash;
+    if (f && prev && f.id !== lastFlash) {
+      if (f.kind === 'strike') showX(f.n);
+      if (f.kind === 'reveal') Sound.ding();
+      if (f.kind === 'buzz') Sound.buzzIn();
+      if (f.kind === 'win') showWin(s);
+      if (f.kind === 'round') Sound.round();
+      if (f.kind === 'over') Sound.gameWin();
+    }
+    lastFlash = f ? f.id : null;
+    prev = s;
+  }
+
+  function buildTiles(q) {
+    const slots = q.count <= 4 ? 4 : 8;
+    const tiles = $('#tiles');
+    tiles.style.gridTemplateRows = `repeat(${slots / 2}, 1fr)`;
+    tiles.innerHTML = '';
+    for (let i = 0; i < slots; i++) {
+      const empty = i >= q.count;
+      const el = document.createElement('div');
+      el.className = 'tile' + (empty ? ' empty' : '');
+      el.innerHTML = `<div class="inner"><div class="face front"><div class="num">${i + 1}</div></div>
+        <div class="face back"><div class="text"></div><div class="pts"></div></div></div>`;
+      tiles.appendChild(el);
+    }
+  }
+
+  function showX(n) {
+    Sound.strike();
+    const o = $('#x-overlay');
+    o.innerHTML = '<span>X</span>'.repeat(Math.max(1, n || 1));
+    o.classList.add('show');
+    setTimeout(() => o.classList.remove('show'), 1400);
+  }
+
+  function showWin(s) {
+    const w = s.winner;
+    if (!w) return;
+    Sound.win();
+    const o = $('#win');
+    o.querySelector('.who').textContent = s.teams[w.team].name;
+    o.querySelector('.who').style.background = w.team === 'red' ? 'var(--red)' : 'var(--blue)';
+    o.querySelector('.pts').textContent = '+' + w.points;
+    o.classList.add('show');
+    clearTimeout(winTimer);
+    winTimer = setTimeout(() => o.classList.remove('show'), 3200);
+  }
+
+  const pill = $('#status');
+  watch(render, {onStatus: st => {
+    pill.textContent = st === 'missing' ? `No game ${CODE}` : 'Reconnecting...';
+    pill.classList.toggle('show', st !== 'ok');
+  }});
+</script>
+</body>
+</html>

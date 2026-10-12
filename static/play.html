@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#003688">
+<title>Buzzer · FAMNMily Feud</title>
+<link rel="stylesheet" href="style.css?v=5">
+<style>
+  html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+  .wrap { height: 100dvh; display: flex; flex-direction: column; padding: calc(16px + env(safe-area-inset-top)) 18px calc(18px + env(safe-area-inset-bottom)); gap: 14px; max-width: 520px; margin: 0 auto; }
+  .head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+  .head img { height: 30px; }
+  .head .code { color: var(--gold); font-weight: 900; letter-spacing: .1em; }
+  .logo-row { text-align: center; margin: 18px 0 10px; }
+  .logo-row .feud-logo { font-size: 2.6rem; }
+  .pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pick .btn { padding: 1.3em .5em; font-weight: 900; text-transform: uppercase; background: var(--navy-deep); border: 3px solid; }
+  .pick .btn.red { border-color: var(--red); }
+  .pick .btn.blue { border-color: var(--blue); }
+  .pick .btn.red.sel { background: var(--red); border-color: #fff; }
+  .pick .btn.blue.sel { background: var(--blue); border-color: #fff; }
+  .scores { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .scores div { color: #fff; border-radius: 4px; padding: 6px 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; font-size: .8rem; text-transform: uppercase; }
+  .scores b { font-weight: 900; font-size: 1.6rem; }
+  .q { text-align: center; font-weight: 700; font-size: 1.15rem; min-height: 2.8em; display: flex; align-items: center; justify-content: center; }
+  #buzzer { flex: 0 0 auto; margin: auto 0; align-self: center; width: min(78vw, 50vh); height: min(78vw, 50vh); border-radius: 50%; border: 12px solid #fff; color: #fff; font-weight: 900; font-size: 3.2rem; letter-spacing: .04em; text-transform: uppercase; box-shadow: inset 0 -14px 0 rgba(0,0,0,.25), 0 10px 0 var(--navy-ink); touch-action: manipulation; user-select: none; -webkit-user-select: none; transition: transform .05s; }
+  #buzzer.red { background-color: var(--red); }
+  #buzzer.blue { background-color: var(--blue); }
+  #buzzer:active:not(:disabled) { transform: translateY(6px); box-shadow: inset 0 -8px 0 rgba(0,0,0,.25), 0 4px 0 var(--navy-ink); }
+  #buzzer:disabled { background-color: var(--gray-deep); border-color: var(--gray); color: #a8a8a8; }
+  .msg { text-align: center; font-size: 1.15rem; font-weight: 700; min-height: 1.5em; }
+  .foot { display: flex; justify-content: space-between; align-items: center; font-size: .85rem; }
+  .foot button { background: none; border: 0; color: #fff; text-decoration: underline; padding: 6px; }
+  .err { color: #fff; text-align: center; font-weight: 700; }
+  .note { text-align: center; margin: auto 0 0; font-size: .9rem; }
+  /* The whole screen shows the buzzer state, so players can read it at a glance. */
+  body { transition: background-color .15s; }
+  body[data-state="open"].red { background-color: var(--red); }
+  body[data-state="open"].blue { background-color: var(--blue); }
+  body[data-state="first"] { background-color: var(--gold); background-image: none; color: var(--navy-ink); }
+  body[data-state="lost"] { background-color: var(--gray-deep); background-image: none; }
+  body[data-state="open"] { background-image: none; }
+  body[data-state="open"] #buzzer { background-color: #fff; color: var(--navy-ink); border-color: var(--navy-ink); }
+  body[data-state="first"] #buzzer { background-color: #fff; color: var(--navy-ink); border-color: var(--navy-ink); }
+  body[data-state="first"] .foot button { color: var(--navy-ink); }
+  body[data-state="open"] .scores div, body[data-state="first"] .scores div { box-shadow: 0 0 0 2px #fff; }
+  body[data-state="open"] .msg, body[data-state="first"] .msg { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; }
+</style>
+</head>
+<body class="rays">
+<div class="wrap" id="join-view">
+  <div class="head"><img src="img/full-white.png" alt="FAMNM"><span>Code <span class="code" id="code"></span></span></div>
+  <div class="logo-row"><div class="feud-logo"><span class="a">FAMNMily</span><span class="b">Feud</span></div></div>
+  <input class="field" id="name" placeholder="Your name" maxlength="20" autocomplete="given-name">
+  <div class="pick">
+    <button class="btn red" data-team="red" id="pick-red">Red Alliance</button>
+    <button class="btn blue" data-team="blue" id="pick-blue">Blue Alliance</button>
+  </div>
+  <button class="btn big gold" id="join">Get my buzzer</button>
+  <p class="err" id="err"></p>
+  <p class="note">Keep this page open and your screen on during the game.</p>
+</div>
+
+<div class="wrap" id="buzz-view" hidden>
+  <div class="scores"><div style="background:var(--red)"><span id="rn"></span><b id="rs">0</b></div><div style="background:var(--blue)"><span id="bn"></span><b id="bs">0</b></div></div>
+  <div class="q" id="q"></div>
+  <button id="buzzer" disabled>Buzz</button>
+  <div class="msg" id="msg"></div>
+  <div class="foot"><span id="me"></span><button id="switch">Switch alliance</button></div>
+</div>
+<div class="status-pill" id="status"></div>
+
+<script src="common.js"></script>
+<script>
+  if (!CODE) location.href = './';
+  $('#code').textContent = CODE;
+  const store = 'feud-player-' + CODE;
+  let me = JSON.parse(localStorage.getItem(store) || 'null');
+  let team = me?.team || 'red', S = null, myBuzzT = null;
+  $('#name').value = me?.name || localStorage.getItem('feud-name') || '';
+
+  const pick = t => { team = t; $('#pick-red').classList.toggle('sel', t === 'red'); $('#pick-blue').classList.toggle('sel', t === 'blue'); };
+  pick(team);
+  document.querySelectorAll('.pick .btn').forEach(b => b.onclick = () => pick(b.dataset.team));
+
+  async function join() {
+    const name = $('#name').value.trim();
+    if (!name) { $('#err').textContent = 'Type your name first.'; return; }
+    try {
+      const {pid} = await post('api/player', {g: CODE, a: 'join', name, team});
+      me = {pid, name, team};
+      localStorage.setItem(store, JSON.stringify(me));
+      localStorage.setItem('feud-name', name);
+      show();
+    } catch (e) { $('#err').textContent = e.status === 404 ? `No game with code ${CODE}.` : e.message; }
+  }
+  $('#join').onclick = join;
+  $('#name').onkeydown = e => { if (e.key === 'Enter') join(); };
+
+  function show() {
+    $('#join-view').hidden = true;
+    $('#buzz-view').hidden = false;
+    $('#buzzer').className = me.team;
+    $('#me').textContent = `${me.name} · ${me.team === 'red' ? 'Red' : 'Blue'} Alliance`;
+    if (S) render(S);
+  }
+
+  // Fire on touchstart so the buzz goes out before the finger lifts.
+  const buzz = async e => {
+    e.preventDefault();
+    if ($('#buzzer').disabled) return;
+    $('#buzzer').disabled = true;
+    try {
+      const r = await post('api/player', {g: CODE, a: 'buzz', pid: me.pid});
+      if (r.first) myBuzzT = r.t;
+      if (S) render(S);
+    } catch (err) {
+      if (err.status === 409) { localStorage.removeItem(store); location.reload(); }
+    }
+  };
+  // During a face-off the whole screen is the buzzer, except the alliance switch link.
+  const anywhere = e => { if (!e.target.closest('#switch')) buzz(e); };
+  $('#buzz-view').addEventListener('touchstart', anywhere, {passive: false});
+  $('#buzz-view').addEventListener('click', anywhere);
+
+  $('#switch').onclick = async () => {
+    const r = await post('api/player', {g: CODE, a: 'switch', pid: me.pid}).catch(() => null);
+    if (r) { me.team = r.team; localStorage.setItem(store, JSON.stringify(me)); show(); }
+  };
+
+  function render(s) {
+    S = s;
+    if (!me || $('#buzz-view').hidden) return;
+    $('#rn').textContent = s.teams.red.name; $('#rs').textContent = s.teams.red.score;
+    $('#bn').textContent = s.teams.blue.name; $('#bs').textContent = s.teams.blue.score;
+    $('#q').textContent = s.question && s.phase !== 'lobby' ? s.question.title : '';
+    const btn = $('#buzzer'), b = s.buzz;
+    const open = s.phase === 'faceoff' && !b;
+    // Compare the buzz timestamp, not a flag, so a late poll reply can't erase a win.
+    const myBuzz = !!(b && b.t === myBuzzT);
+    btn.disabled = !open;
+    btn.classList.toggle('first', !!(b && myBuzz && s.phase === 'faceoff'));
+    let msg = '';
+    if (s.phase === 'lobby' || !s.question) msg = 'Waiting for the host to start.';
+    else if (open) msg = 'Face-off! Buzz when you know it.';
+    else if (s.phase === 'faceoff' && b) msg = myBuzz ? 'You were first! Say your answer.' : `${b.name} buzzed first.`;
+    else if (s.phase === 'play') msg = `${s.teams[s.control].name} is playing.`;
+    else if (s.phase === 'steal') msg = `${s.teams[s.control === 'red' ? 'blue' : 'red'].name} can steal!`;
+    else if (s.phase === 'done' && s.winner) msg = `${s.teams[s.winner.team].name} won ${s.winner.points} points.`;
+    else if (s.phase === 'over' && s.final) msg = s.final.team ? `Game over! ${s.teams[s.final.team].name} wins.` : "Game over! It's a tie.";
+    $('#msg').textContent = msg;
+    document.body.dataset.state = open ? 'open' : myBuzz && s.phase === 'faceoff' ? 'first'
+      : b && s.phase === 'faceoff' ? 'lost' : 'wait';
+    document.body.classList.toggle('red', me.team === 'red');
+    document.body.classList.toggle('blue', me.team === 'blue');
+  }
+
+  if (me) show();
+  const pill = $('#status');
+  watch(render, {onStatus: st => {
+    pill.textContent = st === 'missing' ? `No game ${CODE}` : 'Reconnecting...';
+    pill.classList.toggle('show', st !== 'ok');
+  }});
+</script>
+</body>
+</html>

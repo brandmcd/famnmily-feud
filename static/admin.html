@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#003688">
+<meta name="robots" content="noindex">
+<title>Admin · FAMNMily Feud</title>
+<link rel="stylesheet" href="style.css?v=5">
+<style>
+  body { background: var(--navy); padding-bottom: 110px; }
+  main { max-width: 720px; margin: 0 auto; padding: 18px 14px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .lede { margin: 0 0 16px; line-height: 1.45; }
+  .q { background: var(--navy-ink); border-radius: 6px; margin-bottom: 10px; }
+  .q > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+  .q > summary::-webkit-details-marker { display: none; }
+  .q > summary .t { font-weight: 700; line-height: 1.3; }
+  .q > summary .m { font-size: .8rem; color: #c8d3ec; white-space: nowrap; }
+  .q.off > summary .t { opacity: .5; text-decoration: line-through; }
+  .q .body { padding: 0 14px 14px; display: grid; gap: 10px; }
+  .row { display: grid; gap: 8px; align-items: center; }
+  .r2 { grid-template-columns: 1fr 110px; }
+  .ans { grid-template-columns: 28px 1fr 74px 40px; }
+  .ans .n { font-weight: 900; text-align: center; }
+  label.small { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gold); display: block; margin-bottom: 4px; }
+  .field { font-size: 1rem; padding: .6em .7em; }
+  .x { background: transparent; border: 2px solid rgba(255,255,255,.4); color: #fff; border-radius: 6px; height: 40px; font-weight: 900; cursor: pointer; }
+  .sum { font-size: .85rem; color: #c8d3ec; }
+  .sum.warn { color: var(--gold); }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; }
+  .switch { display: flex; gap: 8px; align-items: center; font-weight: 700; }
+  .switch input { width: 22px; height: 22px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--navy-ink); border-top: 3px solid var(--gold); padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
+  .bar .in { max-width: 720px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
+  .bar .msg { flex: 1; font-size: .9rem; }
+  #login { max-width: 420px; margin: 40px auto; display: grid; gap: 12px; padding: 0 14px; }
+  .err { background: var(--red); padding: 10px 12px; border-radius: 6px; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="login" hidden>
+  <h1>FAMNMily Feud admin</h1>
+  <input class="field" id="key" type="password" placeholder="Admin key" autocomplete="current-password">
+  <button class="btn gold" id="go">Open</button>
+  <p class="err" id="login-err" hidden></p>
+</div>
+
+<main id="app" hidden>
+  <h1>Questions and answers</h1>
+  <p class="lede">Edits apply to games started after you save. Answers sort by points when saved. "Surveyed" is the number the host reads out ("We asked 18 FIRST people"). Turn a question off to keep it out of games without deleting it.</p>
+  <div class="tools" style="margin-bottom:14px">
+    <button class="btn" id="add">Add a question</button>
+    <button class="btn line" id="expand">Open all</button>
+    <button class="btn line" id="import">Re-import from survey</button>
+  </div>
+  <div id="list"></div>
+</main>
+
+<div class="bar" id="bar" hidden><div class="in"><span class="msg" id="msg">No changes.</span><button class="btn gold" id="save">Save</button></div></div>
+
+<script src="common.js"></script>
+<script>
+  let KEY = localStorage.getItem('feud-admin') || '';
+  let Q = [], dirty = false;
+  const api = async (method, path, body) => {
+    const r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Admin-Key': KEY}, body: body ? JSON.stringify(body) : undefined});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'Request failed'), {status: r.status});
+    return d;
+  };
+
+  async function load() {
+    try {
+      Q = (await api('GET', 'api/admin/questions')).questions;
+      localStorage.setItem('feud-admin', KEY);
+      $('#login').hidden = true; $('#app').hidden = false; $('#bar').hidden = false;
+      render();
+    } catch (e) {
+      $('#login').hidden = false; $('#app').hidden = true; $('#bar').hidden = true;
+      if (KEY) { $('#login-err').hidden = false; $('#login-err').textContent = e.status === 403 ? 'That key is not right.' : e.message; }
+    }
+  }
+  $('#go').onclick = () => { KEY = $('#key').value.trim(); load(); };
+  $('#key').onkeydown = e => { if (e.key === 'Enter') $('#go').click(); };
+
+  function mark() { dirty = true; $('#msg').textContent = 'Unsaved changes.'; }
+
+  function render(openIdx = new Set([...document.querySelectorAll('details.q[open]')].map(d => +d.dataset.i))) {
+    $('#list').innerHTML = Q.map((q, i) => {
+      const sum = q.answers.reduce((a, b) => a + (+b.points || 0), 0);
+      const rows = q.answers.map((a, j) => `
+        <div class="row ans">
+          <span class="n">${j + 1}</span>
+          <input class="field" data-i="${i}" data-j="${j}" data-k="text" value="${esc(a.text)}" maxlength="60" placeholder="Answer">
+          <input class="field" data-i="${i}" data-j="${j}" data-k="points" value="${a.points}" type="number" min="0" max="100" inputmode="numeric">
+          <button class="x" data-del-ans="${i},${j}" aria-label="Remove answer">X</button>
+        </div>`).join('');
+      return `<details class="q ${q.enabled ? '' : 'off'}" data-i="${i}" ${openIdx.has(i) ? 'open' : ''}>
+        <summary><span class="t">${i + 1}. ${esc(q.title)}</span><span class="m">${q.answers.length} answers</span></summary>
+        <div class="body">
+          <div><label class="small">Question</label><input class="field" data-i="${i}" data-k="title" value="${esc(q.title)}" maxlength="200"></div>
+          <div class="row r2">
+            <label class="switch"><input type="checkbox" data-i="${i}" data-k="enabled" ${q.enabled ? 'checked' : ''}> Use in games</label>
+            <div><label class="small">Surveyed</label><input class="field" data-i="${i}" data-k="surveyed" type="number" min="0" value="${q.surveyed}" inputmode="numeric"></div>
+          </div>
+          <div><label class="small">Answers and points</label>${rows}</div>
+          <div class="sum ${sum > 100 ? 'warn' : ''}">Points add up to ${sum}${sum > 100 ? ' (more than 100)' : ''}. On the show they total 100 or less.</div>
+          <div class="tools">
+            ${q.answers.length < 8 ? `<button class="btn" data-add-ans="${i}">Add answer</button>` : ''}
+            <button class="btn line" data-up="${i}" ${i === 0 ? 'disabled' : ''}>Move up</button>
+            <button class="btn line" data-del-q="${i}">Delete question</button>
+          </div>
+        </div></details>`;
+    }).join('');
+  }
+
+  // Edits update the in-memory list; the summary line refreshes without a full re-render so typing keeps focus.
+  $('#list').addEventListener('input', e => {
+    const el = e.target, i = +el.dataset.i, k = el.dataset.k;
+    if (!k) return;
+    const q = Q[i];
+    if (el.dataset.j !== undefined) q.answers[+el.dataset.j][k] = k === 'points' ? +el.value : el.value;
+    else q[k] = k === 'enabled' ? el.checked : k === 'surveyed' ? +el.value : el.value;
+    if (k === 'title') el.closest('details').querySelector('summary .t').textContent = `${i + 1}. ${el.value}`;
+    if (k === 'enabled') el.closest('details').classList.toggle('off', !el.checked);
+    if (k === 'points') {
+      const sum = q.answers.reduce((a, b) => a + (+b.points || 0), 0), s = el.closest('.body').querySelector('.sum');
+      s.textContent = `Points add up to ${sum}${sum > 100 ? ' (more than 100)' : ''}. On the show they total 100 or less.`;
+      s.classList.toggle('warn', sum > 100);
+    }
+    mark();
+  });
+  $('#list').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const d = b.dataset;
+    if (d.addAns) { Q[+d.addAns].answers.push({text: '', points: 0}); }
+    else if (d.delAns) { const [i, j] = d.delAns.split(',').map(Number); Q[i].answers.splice(j, 1); }
+    else if (d.up) { const i = +d.up; [Q[i - 1], Q[i]] = [Q[i], Q[i - 1]]; render(new Set([i - 1])); mark(); return; }
+    else if (d.delQ) { if (!confirm('Delete this question?')) return; Q.splice(+d.delQ, 1); render(new Set()); mark(); return; }
+    else return;
+    mark(); render();
+  });
+  $('#add').onclick = () => {
+    Q.push({id: 'n' + Date.now(), title: 'Name something…', enabled: true, surveyed: 0, answers: [{text: '', points: 0}, {text: '', points: 0}]});
+    mark(); render(new Set([Q.length - 1]));
+    document.querySelector(`details.q[data-i="${Q.length - 1}"]`).scrollIntoView({behavior: 'smooth'});
+  };
+  $('#expand').onclick = () => {
+    const all = [...document.querySelectorAll('details.q')], open = all.some(d => !d.open);
+    all.forEach(d => d.open = open); $('#expand').textContent = open ? 'Close all' : 'Open all';
+  };
+  $('#import').onclick = async () => {
+    if (!confirm('Replace every question with the latest survey results? Your edits here will be lost.')) return;
+    try { Q = (await api('POST', 'api/admin/import', {})).questions; dirty = false; $('#msg').textContent = 'Re-imported from the survey.'; render(new Set()); }
+    catch (e) { $('#msg').textContent = e.message; }
+  };
+  $('#save').onclick = async () => {
+    $('#save').disabled = true;
+    try {
+      Q = (await api('POST', 'api/admin/questions', {questions: Q})).questions;
+      dirty = false; $('#msg').textContent = `Saved ${Q.length} questions. New games use them.`; render();
+    } catch (e) { $('#msg').textContent = e.message; }
+    $('#save').disabled = false;
+  };
+  window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  load();
+</script>
+</body>
+</html>

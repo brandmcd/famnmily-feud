@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#020644">
+<meta name="robots" content="noindex">
+<title>Host · FAMNMily Feud</title>
+<link rel="stylesheet" href="style.css?v=5">
+<style>
+  body { background: var(--navy); padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+  .top { position: sticky; top: 0; z-index: 5; background: var(--navy-ink); border-bottom: 3px solid var(--gold); padding: calc(8px + env(safe-area-inset-top)) 10px 8px; }
+  .scores { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; max-width: 560px; margin: 0 auto; }
+  .sc { padding: 5px 10px; display: flex; flex-direction: column; min-width: 0; border-radius: 4px; }
+  .sc.red { background: var(--red); } .sc.blue { background: var(--blue); text-align: right; }
+  .sc .n { font-size: .7rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sc .s { font-weight: 900; font-size: 1.8rem; line-height: 1; }
+  .sc.on { outline: 3px solid var(--gold); outline-offset: -3px; }
+  .bk { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 12px; border: 2px solid var(--gold); border-radius: 4px; }
+  .bk .s { font-weight: 900; font-size: 1.8rem; line-height: 1; }
+  .bk .n { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); }
+  .sub { display: flex; justify-content: space-between; align-items: center; max-width: 560px; margin: 8px auto 0; font-size: .85rem; font-weight: 700; }
+  .sub .code { color: var(--gold); font-weight: 900; letter-spacing: .1em; }
+  .menu-btn { background: none; border: 2px solid rgba(255,255,255,.6); color: #fff; border-radius: 6px; padding: 4px 12px; font-weight: 700; }
+
+  main { max-width: 560px; margin: 0 auto; padding: 0 14px; }
+  section { padding: 16px 0; }
+  section + section { border-top: 1px solid rgba(255,255,255,.15); }
+  .step { font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
+  /* What the host reads aloud, on a white cue card. */
+  .say { background: #fff; color: var(--navy-ink); font-size: 1.2rem; line-height: 1.35; font-weight: 700; padding: 14px 16px; border-radius: 4px; margin: 0 0 10px; }
+  .do { font-size: .95rem; line-height: 1.4; margin: 0 0 12px; }
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .acts > .full { grid-column: 1 / -1; }
+  .tally { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center; margin: 0 0 10px; font-size: .95rem; }
+  .tally b { padding: 2px 8px; border-radius: 3px; font-size: .75rem; text-transform: uppercase; }
+  .tally b.red { background: var(--red); } .tally b.blue { background: var(--blue); }
+  .skip { grid-column: 1 / -1; font-size: .85rem; text-align: center; margin-top: 4px; }
+  .linkish { background: none; border: 0; color: #fff; text-decoration: underline; font-size: .9rem; padding: 6px; cursor: pointer; }
+
+  .qtext { margin: 0 0 10px; font-weight: 700; }
+  .answers { display: grid; gap: 6px; padding: 8px; background: var(--navy-ink); border: 4px solid var(--gold); border-radius: 8px; }
+  .ans { display: grid; grid-template-columns: 44px 1fr 48px; padding: 0; border-radius: 3px; overflow: hidden; background: var(--navy-deep); border: 2px solid #6f93d6; color: #fff; min-height: 50px; text-align: left; touch-action: manipulation; }
+  .ans > span { display: flex; align-items: center; }
+  .ans .i { justify-content: center; font-weight: 900; font-size: 1.15rem; background: var(--navy); }
+  .ans .t { padding: 0 10px; text-transform: uppercase; font-family: 'Roboto Condensed', 'Roboto', sans-serif; font-weight: 800; font-size: 1.05rem; }
+  .ans .p { justify-content: center; font-weight: 900; font-size: 1.15rem; border-left: 2px solid #6f93d6; }
+  .ans.open { background: var(--gray-deep); border-color: var(--gray); color: #b9b9b9; }
+  .ans.open .i { background: var(--gray); color: #fff; }
+  .ans.open .p { border-color: var(--gray); }
+  .strike-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
+  .xbtn { background: var(--red); font-size: 1.25rem; font-weight: 900; text-transform: uppercase; padding: 16px; }
+  .xs { display: flex; gap: 6px; justify-content: center; margin-top: 10px; min-height: 34px; }
+  .xs span { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; border: 3px solid #fff; border-radius: 3px; color: var(--red); background: var(--navy-ink); font-weight: 900; font-size: 1.3rem; }
+  .xs span.off { border-color: rgba(255,255,255,.25); color: transparent; background: transparent; }
+
+  .plan-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .stepper { display: flex; align-items: center; gap: 10px; font-weight: 900; }
+  .stepper button { width: 38px; height: 38px; padding: 0; font-size: 1.2rem; }
+  .slot { display: grid; grid-template-columns: 58px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; background: var(--navy-ink); border: 0; color: #fff; padding: 10px 12px; border-radius: 4px; margin-bottom: 6px; }
+  .slot .r { font-weight: 900; font-size: .8rem; text-transform: uppercase; }
+  .slot .q { font-size: .95rem; line-height: 1.3; }
+  .slot .m { font-size: .7rem; font-weight: 900; text-transform: uppercase; padding: 3px 6px; border-radius: 3px; background: var(--navy); white-space: nowrap; }
+  .slot .m.x2 { background: var(--sky); } .slot .m.x3 { background: var(--gold); color: var(--navy-ink); }
+  .slot.done { opacity: .45; }
+  .slot.next { outline: 2px solid var(--gold); }
+  .btn.big { flex-direction: column; }
+  .btn.big small { display: block; font-size: .8rem; font-weight: 500; text-transform: none; letter-spacing: 0; margin-top: 4px; line-height: 1.3; }
+  .mt { margin-top: 10px; }
+
+  /* Bottom sheets for the menu and the question picker. */
+  .sheet { position: fixed; inset: 0; z-index: 20; background: rgba(2,6,68,.6); display: flex; align-items: flex-end; }
+  .sheet .panel { background: var(--navy); width: 100%; max-width: 560px; margin: 0 auto; max-height: 88dvh; overflow-y: auto; border-top: 4px solid var(--gold); border-radius: 10px 10px 0 0; padding: 14px 16px calc(20px + env(safe-area-inset-bottom)); }
+  .sheet h2 { font-size: 1.1rem; margin: 0; }
+  .sheet .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sheet h3 { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); margin: 18px 0 8px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .seg .btn.sel { background: var(--gold); color: var(--navy-ink); }
+  .adj { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
+  .adj .btn { padding: .65em 0; }
+  .linkbox { word-break: break-all; font-size: .9rem; background: #fff; color: var(--navy-ink); border-radius: 4px; padding: 10px; font-weight: 700; margin-bottom: 8px; }
+  .pick { display: block; width: 100%; text-align: left; background: var(--navy-ink); border: 2px solid transparent; color: #fff; padding: 10px 12px; border-radius: 4px; margin-bottom: 6px; font-size: .95rem; line-height: 1.3; }
+  .pick small { display: block; color: #c8d3ec; margin-top: 2px; }
+  .pick.sel { border-color: var(--gold); }
+  .pick.used { opacity: .45; }
+  .rules { padding-left: 1.2em; line-height: 1.45; margin: 0; }
+  .rules li { margin-bottom: 8px; }
+  .err { background: var(--red); padding: 12px; border-radius: 4px; font-weight: 700; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="scores">
+    <div class="sc red" id="sc-red"><span class="n"></span><span class="s">0</span></div>
+    <div class="bk"><span class="s" id="bank">0</span><span class="n">Bank</span></div>
+    <div class="sc blue" id="sc-blue"><span class="n"></span><span class="s">0</span></div>
+  </div>
+  <div class="sub"><span>Code <span class="code" id="code"></span> · <span id="players"></span></span><button class="menu-btn" id="menu-open">Menu</button></div>
+</div>
+<main id="app"><p>Loading…</p></main>
+<div class="sheet" id="sheet" hidden><div class="panel" id="panel"></div></div>
+<div class="status-pill" id="status"></div>
+
+<script src="common.js"></script>
+<script>
+  const KEY = params.get('k') || localStorage.getItem('feud-host-' + CODE) || '';
+  if (KEY) localStorage.setItem('feud-host-' + CODE, KEY);
+  $('#code').textContent = CODE;
+  let S = null, sheet = null;   // sheet: null, 'menu', or {pick: roundIndex}
+  const MULT = {1: 'Single', 2: 'Double', 3: 'Triple'};
+
+  const act = async (a, extra = {}) => {
+    try { await post('api/host', {g: CODE, k: KEY, a, ...extra}); }
+    catch (e) { alert(e.message); }
+  };
+  const tname = t => S.teams[t].name;
+  const other = t => t === 'red' ? 'blue' : 'red';
+  const btn = (cls, label, a, extra = {}) => `<button class="btn ${cls}" data-a="${a}" data-extra='${JSON.stringify(extra)}'>${label}</button>`;
+  const roundLabel = () => S.round > S.plan ? 'Tiebreaker' : `Round ${S.round} of ${S.plan}`;
+  const multTag = m => m > 1 ? ` · ${MULT[m]} points` : '';
+
+  // ---------- The script: what to say and the buttons for this moment ----------
+  function scriptSection() {
+    const q = S.question, n = q ? q.n : S.surveyed;
+    let step = '', say = '', doo = '', acts = '';
+    if (S.phase === 'lobby' || !q) {
+      step = 'Welcome';
+      say = `Welcome to FAMNMily Feud! It's the ${esc(tname('red'))} against the ${esc(tname('blue'))}. Go to ${esc(joinURL())}, enter code ${CODE}, and pick an alliance.`;
+      doo = 'Put the board on the projector first: Menu, then Open board.';
+    } else if (S.phase === 'faceoff' && !S.buzz) {
+      step = `${roundLabel()} · face-off${multTag(S.mult)}`;
+      const pre = S.round > S.plan ? 'Tiebreaker: win this round, win the game. ' : S.round === S.plan ? 'Last round, worth triple! ' : S.mult === 2 ? 'This round is worth double! ' : '';
+      say = `${pre}One player from each alliance, come up. We asked ${n} FIRST people: ${esc(q.title)}`;
+      doo = 'Waiting for someone to buzz in. No phones? Tap who was first:';
+      acts = btn('red', `${esc(tname('red'))} first`, 'buzz', {team: 'red'}) + btn('blue', `${esc(tname('blue'))} first`, 'buzz', {team: 'blue'});
+    } else if (S.phase === 'faceoff') {
+      step = `${roundLabel()} · face-off`;
+      const fo = S.fo, first = S.buzz.team;
+      if (fo) {
+        const pick = t => !(t in fo.picks) ? '…' : fo.picks[t] < 0 ? 'Not on the board' : `#${fo.picks[t] + 1} ${esc(q.answers[fo.picks[t]].text)}`;
+        const tally = `<div class="tally"><b class="${first}">${esc(tname(first))}</b><span>${pick(first)}</span><b class="${other(first)}">${esc(tname(other(first)))}</b><span>${pick(other(first))}</span></div>`;
+        if (fo.winner) {
+          const w = fo.winner;
+          say = `${esc(tname(w))} wins the face-off! Play or pass?`;
+          doo = tally + (fo.picks[w] === 0 ? 'They named the #1 answer.' : 'Their answer ranks higher.');
+          acts = btn(w, `${esc(tname(w))} plays`, 'control', {team: w}) + btn(other(w), `Pass to ${esc(tname(other(w)))}`, 'control', {team: other(w)});
+        } else if (fo.retry) {
+          say = 'Neither answer is on the board. Buzz again!';
+          doo = tally;
+          acts = btn('gold full', 'Reopen buzzers', 'clear_buzz');
+        } else {
+          say = fo.turn === first ? `${esc(S.buzz.name)}, what's your answer?` : `${esc(tname(fo.turn))}, can you beat that?`;
+          doo = tally + 'Tap their answer on the board below, or:';
+          acts = btn('red full', 'Not on the board', 'strike')
+            + `<div class="skip"><button class="linkish" data-skip="1">Skip the face-off: choose who plays</button></div>`;
+        }
+      } else {
+        say = `${esc(S.buzz.name)}, what's your answer?`;
+        doo = 'Tap their answer on the board below. Then tap who plays:';
+        acts = btn('red', `${esc(tname('red'))} plays`, 'control', {team: 'red'}) + btn('blue', `${esc(tname('blue'))} plays`, 'control', {team: 'blue'});
+      }
+    } else if (S.phase === 'play') {
+      const c = S.control, left = 3 - S.strikes;
+      step = `${roundLabel()} · ${esc(tname(c))} playing`;
+      say = `${esc(tname(c))}, next person in line: your answer?`;
+      doo = `One answer per person, down the line. On the board: tap it. Not there: Strike. ${left} strike${left === 1 ? '' : 's'} left.`;
+    } else if (S.phase === 'steal') {
+      const c = S.control, o = other(c);
+      step = `${roundLabel()} · steal`;
+      say = `Three strikes! ${esc(tname(o))}, huddle up. One answer to steal ${S.bank} points.`;
+      doo = 'If their answer is on the board, tap it first. Then:';
+      acts = btn(o, 'Steal worked', 'steal', {ok: true}) + btn(c, 'Steal failed', 'steal', {ok: false});
+    } else if (S.phase === 'done') {
+      const w = S.winner, hidden = S.revealed.some(r => !r);
+      step = `${roundLabel()} · done`;
+      say = w ? `${esc(tname(w.team))} takes the round and ${w.points} points!` : '';
+      if (hidden) acts = btn('line full', 'Reveal the rest of the board', 'reveal_all');
+    } else if (S.phase === 'over') {
+      const f = S.final;
+      step = 'Final';
+      say = f && f.team ? `That's the game! ${esc(tname(f.team))} wins, ${f[f.team]} to ${f[other(f.team)]}. Thanks for playing!`
+                        : `That's the game, and it's a tie at ${f ? f.red : 0}! Thanks for playing!`;
+    }
+    return `<section><p class="step">${step}</p>${say ? `<p class="say">${say}</p>` : ''}${doo ? `<div class="do">${doo}</div>` : ''}${acts ? `<div class="acts">${acts}</div>` : ''}</section>`;
+  }
+
+  // ---------- The board: answers to tap, plus Strike while a team is playing ----------
+  function boardSection() {
+    const q = S.question;
+    const live = ['faceoff', 'play', 'steal'].includes(S.phase);
+    const rows = q.answers.map((a, i) => `
+      <button class="ans ${S.revealed[i] ? 'open' : ''}" data-a="${S.revealed[i] ? 'hide' : 'reveal'}" data-extra='{"i":${i}}'>
+        <span class="i">${i + 1}</span><span class="t">${esc(a.text)}</span><span class="p">${a.points}</span>
+      </button>`).join('');
+    const strikes = S.phase === 'play' || S.phase === 'steal'
+      ? `<div class="strike-row">${btn('xbtn', 'X &nbsp;Strike', 'strike')}${btn('line', 'Undo', 'unstrike')}</div>
+         <div class="xs">${[0, 1, 2].map(i => `<span class="${i < S.strikes ? '' : 'off'}">X</span>`).join('')}</div>` : '';
+    return `<section><p class="step">${live ? 'Board · tap to reveal, tap again to hide' : 'Board · no points now'}</p>
+      <p class="qtext">${esc(q.title)}</p><div class="answers">${rows}</div>${strikes}</section>`;
+  }
+
+  // ---------- What comes next: lineup in the lobby, next round, end of game ----------
+  function slot(r) {
+    const x = S.lineup[r];
+    if (!x) return '';
+    const q = S.questions[x.qi], played = r < S.round;
+    return `<button class="slot ${played ? 'done' : ''} ${r === S.round && S.phase !== 'over' ? 'next' : ''}" data-pick="${r}" ${played ? 'disabled' : ''}>
+      <span class="r">Round ${r + 1}</span><span class="q">${esc(q.title)}</span><span class="m x${x.mult}">${MULT[x.mult]}</span></button>`;
+  }
+  function startBtn(label) {
+    const rec = S.recommend;
+    if (!rec) return '<p class="do">Every question has been played.</p>';
+    return btn('big gold full', `${label}<small>${esc(S.questions[rec.qi].title)}${multTag(rec.mult)}</small>`, 'start_round');
+  }
+  function nextSection() {
+    const r = S.round, plan = S.plan, red = S.teams.red.score, blue = S.teams.blue.score;
+    if (S.phase === 'lobby' || !S.question) {
+      return `<section><div class="plan-head"><p class="step" style="margin:0">Game plan</p>
+          <div class="stepper">${btn('', '−', 'plan', {plan: Math.max(1, plan - 1)})}${plan} rounds${btn('', '+', 'plan', {plan: Math.min(10, plan + 1)})}</div></div>
+        <p class="do">About ${plan * 5} minutes. Tap a round to change its question or points.</p>
+        ${S.lineup.map((_, i) => slot(i)).join('')}
+        <div class="mt">${startBtn('Start round 1')}</div></section>`;
+    }
+    if (S.phase === 'done') {
+      if (r < plan) return `<section><p class="step">Up next · tap to change</p>${slot(r)}<div class="mt">${startBtn(`Start round ${r + 1}`)}</div></section>`;
+      if (red === blue) return `<section><p class="step">Tied ${red} to ${blue}</p>
+        <p class="do">That was the last round. Play a tiebreaker, then end the game.</p>
+        ${startBtn('Play a tiebreaker round')}
+        <div class="mt">${btn('line full', 'End the game as a tie', 'end_game')}</div></section>`;
+      return `<section><p class="step">That was the last round</p>
+        ${btn('big gold full', 'End game and show the winner', 'end_game')}
+        <div class="mt">${startBtn('Play one more round')}</div></section>`;
+    }
+    if (S.phase === 'over') {
+      return `<section><button class="btn big gold full" data-confirm="reset_scores" style="width:100%">Play again<small>Scores go back to 0. Played questions are skipped.</small></button></section>`;
+    }
+    return '';
+  }
+
+  // ---------- Sheets ----------
+  function menuSheet() {
+    const board = `${location.origin}${location.pathname.replace(/[^/]*$/, '')}board?g=${CODE}`;
+    const adj = t => [-10, -5, 5, 10].map(d => btn(t, (d > 0 ? '+' : '') + d, 'adjust', {team: t, delta: d})).join('');
+    return `<div class="head"><h2>Menu</h2><button class="btn line" data-close="1">Close</button></div>
+      <h3>Projector board</h3><div class="linkbox">${esc(board)}</div>
+      <div class="acts"><button class="btn" id="copy-board">Copy link</button><a class="btn" href="board?g=${CODE}" target="_blank">Open board</a></div>
+      <h3>Alliance names</h3><div class="acts"><button class="btn red" data-rename="red">Rename red</button><button class="btn blue" data-rename="blue">Rename blue</button></div>
+      <h3>Fix scores</h3><div class="adj">${adj('red')}</div><div class="adj">${adj('blue')}</div>
+      <h3>This round's points</h3><div class="seg">${[1, 2, 3].map(m => btn(m === S.mult ? 'sel' : '', MULT[m], 'mult', {mult: m})).join('')}</div>
+      ${S.phase === 'play' || S.phase === 'steal' ? `<h3>End this round early</h3><div class="acts">${btn('red', `Give ${S.bank} to ${esc(tname('red'))}`, 'award', {team: 'red'})}${btn('blue', `Give ${S.bank} to ${esc(tname('blue'))}`, 'award', {team: 'blue'})}</div>` : ''}
+      <h3>Screens</h3><div class="acts">${btn('', 'Show join screen', 'lobby')}${btn('', 'Reset buzzers', 'clear_buzz')}</div>
+      <div class="mt"><button class="btn line" data-confirm="reset_scores" style="width:100%">New game (scores to 0)</button></div>
+      <h3>How Family Feud works</h3><ol class="rules">
+        <li><b>Face-off.</b> One player per alliance; first to buzz answers. The #1 answer wins outright. Otherwise the other player answers and the higher answer wins.</li>
+        <li><b>Play or pass.</b> The winner picks who plays the question. Almost everyone plays.</li>
+        <li><b>Play.</b> The playing alliance goes down the line, one answer each. Right answers flip and add to the bank; wrong ones are strikes.</li>
+        <li><b>Win or steal.</b> Find every answer before 3 strikes to win the bank. After 3 strikes, the other alliance gets one answer to steal it all.</li>
+        <li><b>Bigger rounds.</b> Later rounds are worth double, the last is triple. Most points wins.</li></ol>
+      <h3>Host link</h3><p class="do">Bookmark this page. Anyone with its link can run the game, so keep it off the projector.</p>`;
+  }
+  function pickSheet(r) {
+    const x = S.lineup[r];
+    const list = S.questions.map((q, i) => {
+      const used = S.used.includes(i), at = S.lineup.findIndex(y => y.qi === i);
+      return `<button class="pick ${i === x.qi ? 'sel' : ''} ${used ? 'used' : ''}" data-set="${i}" ${used ? 'disabled' : ''}>${esc(q.title)}
+        <small>${q.count} answers · top ${q.top} pts${used ? ' · played' : at >= 0 && at !== r ? ` · in round ${at + 1} (swaps)` : ''}</small></button>`;
+    }).join('');
+    return `<div class="head"><h2>Round ${r + 1}</h2><button class="btn line" data-close="1">Done</button></div>
+      <h3>Points</h3><div class="seg">${[1, 2, 3].map(m => `<button class="btn ${m === x.mult ? 'sel' : ''}" data-setmult="${m}">${MULT[m]}</button>`).join('')}</div>
+      <h3>Question</h3>${list}`;
+  }
+
+  function render(s) {
+    S = s;
+    if (!s.key) { $('#app').innerHTML = `<p class="err">This phone doesn't have the host key for ${CODE}. Open the host link from the phone that started the game.</p>`; return; }
+    for (const t of ['red', 'blue']) {
+      const el = $('#sc-' + t);
+      el.querySelector('.n').textContent = s.teams[t].name;
+      el.querySelector('.s').textContent = s.teams[t].score;
+      el.classList.toggle('on', s.control === t && ['play', 'steal'].includes(s.phase));
+    }
+    $('#bank').textContent = s.bank;
+    $('#players').textContent = `${s.players} joined`;
+    let html = scriptSection();
+    if (['lobby', 'done', 'over'].includes(s.phase) || !s.question) html += nextSection();
+    if (s.question && !['lobby', 'over'].includes(s.phase)) html += boardSection();
+    $('#app').innerHTML = html;
+    renderSheet();
+  }
+  function renderSheet() {
+    $('#sheet').hidden = !sheet;
+    if (!sheet) return;
+    const top = $('#panel').scrollTop;
+    $('#panel').innerHTML = sheet === 'menu' ? menuSheet() : pickSheet(sheet.pick);
+    $('#panel').scrollTop = top;
+  }
+
+  $('#menu-open').onclick = () => { sheet = 'menu'; renderSheet(); };
+  $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') { sheet = null; renderSheet(); } });
+
+  // One delegated handler for every button.
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('button');
+    if (!b || !S) return;
+    const d = b.dataset;
+    if (d.close) { sheet = null; return renderSheet(); }
+    if (d.pick !== undefined) { sheet = {pick: +d.pick}; return renderSheet(); }
+    if (d.set !== undefined) { const r = sheet.pick; sheet = null; return act('lineup', {r, qi: +d.set}); }
+    if (d.setmult) return act('lineup', {r: sheet.pick, mult: +d.setmult});
+    if (d.skip) { b.closest('.acts').innerHTML = btn('red', `${esc(tname('red'))} plays`, 'control', {team: 'red'}) + btn('blue', `${esc(tname('blue'))} plays`, 'control', {team: 'blue'}); return; }
+    if (d.rename) { const name = prompt('Alliance name', S.teams[d.rename].name); if (name) act('rename', {team: d.rename, name}); return; }
+    if (d.confirm) { if (confirm('Start a new game? Scores go back to 0.')) { sheet = null; act(d.confirm); } return; }
+    if (b.id === 'copy-board') { navigator.clipboard?.writeText($('.linkbox').textContent).then(() => b.textContent = 'Copied'); return; }
+    if (d.a === 'award') { sheet = null; renderSheet(); }
+    if (d.a) act(d.a, d.extra ? JSON.parse(d.extra) : {});
+  });
+
+  const pill = $('#status');
+  watch(render, {key: KEY, onStatus: st => {
+    pill.textContent = st === 'missing' ? `No game ${CODE}` : 'Reconnecting...';
+    pill.classList.toggle('show', st !== 'ok');
+  }});
+</script>
+</body>
+</html>

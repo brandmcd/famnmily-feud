@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#003688">
+<title>FAMNMily Feud</title>
+<link rel="stylesheet" href="style.css?v=5">
+<style>
+  main { max-width: 440px; margin: 0 auto; padding: 26px 20px 40px; display: flex; flex-direction: column; gap: 26px; }
+  .logo { width: 70%; max-width: 280px; margin: 0 auto; display: block; }
+  .title { text-align: center; }
+  .title .feud-logo { font-size: 3.3rem; }
+  section { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: flex; gap: 10px; }
+  .row .field { text-transform: uppercase; letter-spacing: .25em; font-weight: 900; text-align: center; }
+  .row .btn { min-width: 96px; }
+  .err { color: #fff; font-weight: 700; min-height: 1.2em; margin: 0; font-size: .95rem; }
+  .small { margin: 0; font-size: .95rem; line-height: 1.4; }
+  hr { border: 0; border-top: 1px solid rgba(255,255,255,.25); margin: 0; width: 100%; }
+</style>
+</head>
+<body class="rays">
+<main>
+  <img class="logo" src="img/full-white.png" alt="FAMNM, FIRST Alumni and Mentors Network at Michigan">
+  <div class="title"><div class="feud-logo"><span class="a">FAMNMily</span><span class="b">Feud</span></div></div>
+
+  <section>
+    <p class="label">Join a game</p>
+    <div class="row">
+      <input id="join-code" class="field" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+      <button class="btn gold" id="join">Join</button>
+    </div>
+    <p class="err" id="join-err"></p>
+  </section>
+
+  <hr>
+
+  <section>
+    <p class="label">Host a game</p>
+    <button class="btn big line" id="host">Start a new game</button>
+    <p class="small">Run the game from your phone. You get a code for players and a link for the projector.</p>
+    <p class="err" id="host-err"></p>
+  </section>
+
+  <section>
+    <p class="label">Projector board</p>
+    <div class="row">
+      <input id="board-code" class="field" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters">
+      <button class="btn line" id="board">Open</button>
+    </div>
+  </section>
+</main>
+<script src="common.js"></script>
+<script>
+  const go = (page, input, errEl) => {
+    const code = $(input).value.trim().toUpperCase();
+    if (code.length !== 4) { $(errEl).textContent = 'Codes are 4 letters.'; return; }
+    location.href = `${page}?g=${code}`;
+  };
+  $('#join').onclick = () => go('play', '#join-code', '#join-err');
+  $('#join-code').onkeydown = e => { if (e.key === 'Enter') $('#join').click(); };
+  $('#board').onclick = () => go('board', '#board-code', '#join-err');
+  $('#host').onclick = async () => {
+    $('#host').disabled = true;
+    try {
+      const {code, key} = await post('api/create', {});
+      localStorage.setItem('feud-host-' + code, key);
+      location.href = `host?g=${code}&k=${key}`;
+    } catch (e) { $('#host-err').textContent = e.message; $('#host').disabled = false; }
+  };
+  if (CODE) $('#join-code').value = CODE;
+</script>
+</body>
+</html>

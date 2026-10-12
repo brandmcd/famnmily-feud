@@ -1,0 +1,24 @@
+[Unit]
+Description=FAMNMily Feud game show (brandmcd.com/famnmily-feud)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=feud
+Group=feud
+WorkingDirectory=/opt/famnmily-feud
+Environment=FEUD_PORT=8098
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 server.py
+Restart=always
+RestartSec=3
+MemoryMax=128M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/opt/famnmily-feud/data
+
+[Install]
+WantedBy=multi-user.target

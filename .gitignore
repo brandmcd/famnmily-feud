@@ -1,0 +1,6 @@
+# Survey answers and saved games: never commit these.
+data/
+# FAMNM logo files are distributed by FAMNM, not this repo.
+static/img/
+__pycache__/
+*.pyc

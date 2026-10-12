@@ -1,0 +1,10 @@
+{
+ "questions": [
+  {"id": "ex1", "title": "Name a famous robot from a movie or TV show.", "enabled": true, "surveyed": 100,
+   "answers": [{"text": "R2-D2", "points": 31}, {"text": "WALL-E", "points": 24}, {"text": "C-3PO", "points": 15}, {"text": "Terminator", "points": 12}, {"text": "Baymax", "points": 10}, {"text": "Optimus Prime", "points": 8}]},
+  {"id": "ex2", "title": "Name something you see at a competition opening ceremony.", "enabled": true, "surveyed": 100,
+   "answers": [{"text": "National anthem", "points": 41}, {"text": "Sponsor thanks", "points": 22}, {"text": "Game video", "points": 16}, {"text": "Dancing", "points": 12}, {"text": "Speeches", "points": 9}]},
+  {"id": "ex3", "title": "Name something people do on a snow day.", "enabled": true, "surveyed": 100,
+   "answers": [{"text": "Sleep in", "points": 35}, {"text": "Build a snowman", "points": 25}, {"text": "Sledding", "points": 18}, {"text": "Hot chocolate", "points": 12}, {"text": "Watch movies", "points": 10}]}
+ ]
+}
