@@ -5,6 +5,8 @@ const OUT = (process.env.OUT || '/tmp/feud-test') + '/';
 const port = 9800 + Math.floor(Math.random() * 100);
 const proc = Bun.spawn(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
   `--remote-debugging-port=${port}`, '--user-data-dir=/tmp/cdp/game' + port, 'about:blank'], {stderr: 'ignore', stdout: 'ignore'});
+// Close chromium however this script ends, including when a step throws.
+process.on('exit', () => proc.kill());
 for (let i = 0; i < 60; i++) { try { await fetch(`http://127.0.0.1:${port}/json/version`); break; } catch { await Bun.sleep(100); } }
 const results = [];
 const check = (name, ok, got) => { results.push([ok, name, got]); console.log(ok ? 'PASS' : 'FAIL', name, ok ? '' : '=> ' + JSON.stringify(got)); };
