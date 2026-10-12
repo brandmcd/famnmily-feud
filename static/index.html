@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#003688">
 <title>FAMNMily Feud</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 <style>
   main { max-width: 440px; margin: 0 auto; padding: 26px 20px 40px; display: flex; flex-direction: column; gap: 26px; }
   .logo { width: 70%; max-width: 280px; margin: 0 auto; display: block; }
@@ -64,7 +64,15 @@
   $('#host').onclick = async () => {
     $('#host').disabled = true;
     try {
-      const {code, key} = await post('api/create', {});
+      let admin = localStorage.getItem('feud-admin') || '';
+      let res = await post('api/create', {admin}).catch(e => e);
+      // While hosting is locked, ask for the host password (the admin key) and try once more.
+      if (res instanceof Error && res.status === 403) {
+        admin = prompt('Hosting is locked until the event. Host password:') || '';
+        res = await post('api/create', {admin});
+        localStorage.setItem('feud-admin', admin);
+      } else if (res instanceof Error) throw res;
+      const {code, key} = res;
       localStorage.setItem('feud-host-' + code, key);
       location.href = `host?g=${code}&k=${key}`;
     } catch (e) { $('#host-err').textContent = e.message; $('#host').disabled = false; }

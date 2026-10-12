@@ -1,6 +1,6 @@
 // Full-game test: host phone, projector board and two player phones open at once.
 const BASE = Bun.argv[2] || 'http://127.0.0.1:8098/';
-// Usage: bun tests/browser-game.js [base_url]   (needs chromium; screenshots go to $OUT or /tmp/feud-test)
+// Usage: ADMIN_KEY=... bun tests/browser-game.js [base_url]   (needs chromium; screenshots go to $OUT or /tmp/feud-test)
 const OUT = (process.env.OUT || '/tmp/feud-test') + '/';
 const port = 9800 + Math.floor(Math.random() * 100);
 const proc = Bun.spawn(['chromium', '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
@@ -58,7 +58,8 @@ const msg = p => text(p, '#msg');
 await Bun.$`mkdir -p ${OUT}`;
 // 1. Create from the landing page like a phone would.
 const host = await page(BASE, 390, 1400, true);
-await host.ev(`document.querySelector('#host').click()`); await wait(2000);
+// Hosting may be locked; the landing page then asks for the admin key (ADMIN_KEY env).
+await host.ev(`window.prompt = () => ${JSON.stringify(process.env.ADMIN_KEY || '')}; localStorage.clear(); document.querySelector('#host').click()`); await wait(2000);
 const hostURL = await host.ev('location.href');
 const CODE = new URL(hostURL).searchParams.get('g');
 check('landing creates game and opens host page', /host\?g=[A-Z]{4}&k=/.test(hostURL), hostURL);

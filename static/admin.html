@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#003688">
 <meta name="robots" content="noindex">
 <title>Admin · FAMNMily Feud</title>
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 <style>
   body { background: var(--navy); padding-bottom: 110px; }
   main { max-width: 720px; margin: 0 auto; padding: 18px 14px; }
@@ -35,6 +35,10 @@
   .bar .in { max-width: 720px; margin: 0 auto; display: flex; gap: 10px; align-items: center; }
   .bar .msg { flex: 1; font-size: .9rem; }
   #login { max-width: 420px; margin: 40px auto; display: grid; gap: 12px; padding: 0 14px; }
+  .lockbox { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 6px; margin-bottom: 16px; font-weight: 700; }
+  .lockbox.on { background: var(--navy-ink); border: 2px solid var(--gold); }
+  .lockbox.off { background: var(--red); }
+  .lockbox small { display: block; font-weight: 400; margin-top: 2px; }
   .err { background: var(--red); padding: 10px 12px; border-radius: 6px; font-weight: 700; }
 </style>
 </head>
@@ -49,6 +53,7 @@
 <main id="app" hidden>
   <h1>Questions and answers</h1>
   <p class="lede">Edits apply to games started after you save. Answers sort by points when saved. "Surveyed" is the number the host reads out ("We asked 18 FIRST people"). Turn a question off to keep it out of games without deleting it.</p>
+  <div class="lockbox" id="lockbox"></div>
   <div class="tools" style="margin-bottom:14px">
     <button class="btn" id="add">Add a question</button>
     <button class="btn line" id="expand">Open all</button>
@@ -72,7 +77,8 @@
 
   async function load() {
     try {
-      Q = (await api('GET', 'api/admin/questions')).questions;
+      const d = await api('GET', 'api/admin/questions');
+      Q = d.questions; renderLock(d.locked);
       localStorage.setItem('feud-admin', KEY);
       $('#login').hidden = true; $('#app').hidden = false; $('#bar').hidden = false;
       render();
@@ -83,6 +89,18 @@
   }
   $('#go').onclick = () => { KEY = $('#key').value.trim(); load(); };
   $('#key').onkeydown = e => { if (e.key === 'Enter') $('#go').click(); };
+
+  function renderLock(locked) {
+    const b = $('#lockbox');
+    b.className = 'lockbox ' + (locked ? 'on' : 'off');
+    b.innerHTML = locked
+      ? `<span>Hosting is locked<small>Starting a game asks for this admin key, so nobody can see answers early.</small></span><button class="btn line" id="lock-toggle">Unlock</button>`
+      : `<span>Hosting is open<small>Anyone with the link can start a game and see every answer on the host screen.</small></span><button class="btn gold" id="lock-toggle">Lock</button>`;
+    $('#lock-toggle').onclick = async () => {
+      if (locked && !confirm('Unlock hosting? Anyone with the link could start a game and see the answers.')) return;
+      renderLock((await api('POST', 'api/admin/lock', {locked: !locked})).locked);
+    };
+  }
 
   function mark() { dirty = true; $('#msg').textContent = 'Unsaved changes.'; }
 

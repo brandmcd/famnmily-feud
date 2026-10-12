@@ -35,6 +35,8 @@ After that, edit questions on the `/admin` page. "Re-import from survey" on that
 
 The admin key is read from `/etc/famnmily-feud/admin.key` (or `FEUD_ADMIN_KEY_FILE`). Without that file the admin page stays locked.
 
+The host screen shows every answer, so hosting starts out locked: "Start a new game" asks for the admin key. Unlock it on the admin page if you want anyone with the link to be able to host. The setting lives in `data/settings.json`.
+
 ## Logos
 
 `static/img/` holds the FAMNM logo files. The game uses `full-white.png`; swap it for your own logo to reuse the game.
@@ -48,7 +50,7 @@ The host picks how many rounds to play and can change the question and points fo
 `tests/browser-game.js` plays complete games in headless Chromium with the host, the board and two player phones open at once, and checks every screen after each step. It needs [Bun](https://bun.sh) and Chromium and a running server:
 
 ```
-bun tests/browser-game.js http://127.0.0.1:8098/
+ADMIN_KEY=your-admin-key bun tests/browser-game.js http://127.0.0.1:8098/
 ```
 
 ## Sounds

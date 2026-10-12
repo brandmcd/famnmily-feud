@@ -25,6 +25,7 @@ BOARD_CSV = os.environ.get('FEUD_BOARD_CSV', os.path.join(ROOT, 'data', 'board.c
 PORT = int(os.environ.get('FEUD_PORT', '8098'))
 QUESTIONS = os.environ.get('FEUD_QUESTIONS', os.path.join(ROOT, 'data', 'questions.json'))
 EXAMPLE = os.path.join(ROOT, 'questions.example.json')
+SETTINGS = os.path.join(ROOT, 'data', 'settings.json')
 ADMIN_KEY_FILE = os.environ.get('FEUD_ADMIN_KEY_FILE', '/etc/famnmily-feud/admin.key')
 MAX_ANSWERS = 8
 POLL_SECONDS = float(os.environ.get('FEUD_POLL_SECONDS', '25'))
@@ -100,6 +101,21 @@ def load_questions():
     """Questions for a new game: enabled ones with at least two answers."""
     return [{'title': q['title'], 'n': q['surveyed'], 'answers': q['answers']}
             for q in load_store() if q.get('enabled', True) and len(q['answers']) >= 2]
+
+
+def hosting_locked():
+    """While locked, starting a game needs the admin key, so nobody can open a host screen
+    (which shows every answer) before the event."""
+    try:
+        with open(SETTINGS) as f:
+            return bool(json.load(f).get('locked', True))
+    except (OSError, ValueError):
+        return True
+
+
+def set_locked(locked):
+    with open(SETTINGS, 'w') as f:
+        json.dump({'locked': bool(locked)}, f)
 
 
 def admin_key():
@@ -425,7 +441,7 @@ class Handler(BaseHTTPRequestHandler):
             if not self.is_admin():
                 return self.send(403, {'error': 'Wrong admin key.'})
             with lock:
-                return self.send(200, {'questions': load_store()})
+                return self.send(200, {'questions': load_store(), 'locked': hosting_locked()})
         name = path.lstrip('/')
         if '.' not in name:
             name += '.html'
@@ -471,6 +487,9 @@ class Handler(BaseHTTPRequestHandler):
                         qs = clean_questions(body.get('questions', []))
                     elif u.path == '/api/admin/import':
                         qs = read_survey_csv(BOARD_CSV)
+                    elif u.path == '/api/admin/lock':
+                        set_locked(body.get('locked', True))
+                        return self.send(200, {'locked': hosting_locked()})
                     else:
                         return self.send(404, {'error': 'not found'})
                 except (OSError, ValueError, TypeError, KeyError) as e:
@@ -480,6 +499,9 @@ class Handler(BaseHTTPRequestHandler):
         with lock:
             expire()
             if u.path == '/api/create':
+                key = admin_key()
+                if hosting_locked() and not (key and secrets.compare_digest(str(body.get('admin', '')), key)):
+                    return self.send(403, {'error': 'Hosting is locked. Enter the host password.', 'locked': True})
                 try:
                     g = new_game()
                 except OSError:
